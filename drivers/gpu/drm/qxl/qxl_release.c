@@ -20,8 +20,6 @@
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#include <linux/delay.h>
-
 #include <drm/drm_print.h>
 
 #include <trace/events/dma_fence.h>
@@ -61,14 +59,24 @@ static long qxl_fence_wait(struct dma_fence *fence, bool intr,
 {
 	struct qxl_device *qdev;
 	unsigned long cur, end = jiffies + timeout;
+	signed long iterations = 1;
+	signed long timeout_fraction = timeout;
 
 	qdev = container_of(fence->lock, struct qxl_device, release_lock);
 
-	if (!wait_event_timeout(qdev->release_event,
+	// using HZ as a factor since it is used in ttm_bo_wait_ctx too
+	if (timeout_fraction > HZ) {
+		iterations = timeout_fraction / HZ;
+		timeout_fraction = HZ;
+	}
+	for (int i = 0; i < iterations; i++) {
+		if (wait_event_timeout(
+				qdev->release_event,
 				(dma_fence_is_signaled(fence) ||
-				 (qxl_io_notify_oom(qdev), 0)),
-				timeout))
-		return 0;
+					(qxl_io_notify_oom(qdev), 0)),
+				timeout_fraction))
+			break;
+	}
 
 	cur = jiffies;
 	if (time_after(cur, end))
