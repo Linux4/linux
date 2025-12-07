@@ -65,6 +65,11 @@ install_linux_image () {
 	esac
 	cp "$(${MAKE} -s -f ${srctree}/Makefile image_name)" "${pdir}/${installed_image_path}"
 
+	if [ ! -z "${MOK_KEY}" ] && [ ! -z "${MOK_CERT}" ]; then
+		sbsign --key "${MOK_KEY}" --cert "${MOK_CERT}" "${pdir}/${installed_image_path}" --output "${pdir}/${installed_image_path}.signed"
+		mv "${pdir}/${installed_image_path}.signed" "${pdir}/${installed_image_path}"
+	fi
+
 	if [ "${ARCH}" != um ]; then
 		install_maint_scripts "${pdir}"
 	fi
