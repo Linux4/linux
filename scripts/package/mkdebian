@@ -215,7 +215,7 @@ Build-Depends-Arch: bc, bison, flex,
  python3:native, rsync, sbsigntool
 Homepage: https://www.kernel.org/
 
-Package: $packagename-${KERNELRELEASE}
+Package: $packagename-${KDEB_PACKAGE_SUFFIX:-$KERNELRELEASE}
 Architecture: $debarch
 Description: Linux kernel, version ${KERNELRELEASE}
  This package contains the Linux kernel, modules and corresponding other
@@ -238,7 +238,7 @@ EOF
 if is_enabled CONFIG_MODULES; then
 cat <<EOF >> debian/control
 
-Package: linux-headers-${KERNELRELEASE}
+Package: linux-headers-${KDEB_PACKAGE_SUFFIX:-KERNELRELEASE}
 Architecture: $debarch
 Build-Profiles: <!pkg.${sourcename}.nokernelheaders>
 Description: Linux kernel headers for ${KERNELRELEASE} on $debarch
